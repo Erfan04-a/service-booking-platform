@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3 class="mb-4">🛠 لیست خدمات</h3>
+
+<a href="/add_service" class="btn btn-primary mb-3">➕ افزودن خدمت جدید</a>
+
+<div class="card p-3">
+    <table class="table table-hover text-center">
+        <thead>
+            <tr>
+                <th>عنوان خدمت</th>
+                <th>قیمت (تومان)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in services %}
+            <tr>
+                <td>{{ s.title }}</td>
+                <td>{{ "{:,}".format(s.price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

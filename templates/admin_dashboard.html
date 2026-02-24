@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3 class="mb-4">📌 درخواست‌های ثبت‌شده</h3>
+
+<form class="row mb-3">
+    <div class="col-md-6">
+        <input type="text" name="search" value="{{ search }}" class="form-control"
+               placeholder="جستجو بر اساس نام">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">جستجو</button>
+    </div>
+</form>
+
+<div class="card p-3">
+    <table class="table table-bordered table-striped text-center">
+        <thead>
+            <tr>
+                <th>نام</th>
+                <th>تلفن</th>
+                <th>ایمیل</th>
+                <th>خدمت</th>
+                <th>وضعیت</th>
+                <th>اقدام</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr>
+                <td>{{ r.name }}</td>
+                <td>{{ r.phone }}</td>
+                <td>{{ r.email }}</td>
+                <td>{{ r.service.title }}</td>
+                <td class="fw-bold text-success">{{ r.status }}</td>
+                <td>
+                    <a href="/update_status/{{ r.id }}/در حال انجام"
+                       class="btn btn-warning btn-sm">در حال انجام</a>
+                    <a href="/update_status/{{ r.id }}/انجام شد"
+                       class="btn btn-success btn-sm">انجام شد</a>
+                    <a href="/delete_request/{{ r.id }}"
+                       class="btn btn-danger btn-sm">حذف</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

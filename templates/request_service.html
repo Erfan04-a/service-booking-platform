@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h3 class="mb-4">ثبت درخواست جدید</h3>
+
+<form method="POST">
+
+    <div class="mb-3">
+        <label>نام</label>
+        <input type="text" name="name" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>شماره تماس</label>
+        <input type="text" name="phone" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>ایمیل</label>
+        <input type="email" name="email" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>انتخاب خدمت</label>
+        <select name="service" class="form-control" required>
+            {% for s in services %}
+                <option value="{{ s.id }}">{{ s.title }} - {{ s.price }} تومان</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button class="btn btn-success w-100">ثبت درخواست</button>
+
+</form>
+
+{% endblock %}
