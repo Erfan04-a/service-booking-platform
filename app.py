@@ -1,14 +1,20 @@
+import os
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+
+# -------------------------
+# Security
+# -------------------------
+app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
 
 # -------------------------
 # Database configuration
 # -------------------------
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///home_service.db"
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(BASE_DIR, "home_service.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -44,7 +50,6 @@ class Request(db.Model):
 with app.app_context():
     db.create_all()
 
-    # Add default services if not exist
     if Service.query.count() == 0:
         db.session.add_all([
             Service(title="نظافت منزل", price=150000),
@@ -57,15 +62,11 @@ with app.app_context():
 # Routes
 # -------------------------
 
-# Home page
 @app.route("/")
 def home():
     services = Service.query.all()
     return render_template("home.html", services=services)
 
-# -------------------------
-# User Register
-# -------------------------
 @app.route("/user_register", methods=["GET", "POST"])
 def user_register():
     if request.method == "POST":
@@ -86,9 +87,6 @@ def user_register():
 
     return render_template("user_register.html")
 
-# -------------------------
-# User Login
-# -------------------------
 @app.route("/user_login", methods=["GET", "POST"])
 def user_login():
     if request.method == "POST":
@@ -105,21 +103,18 @@ def user_login():
 
     return render_template("user_login.html")
 
-# -------------------------
-# User Dashboard
-# -------------------------
 @app.route("/user_dashboard")
 def user_dashboard():
     if "user_id" not in session:
         return redirect("/user_login")
 
-    user_requests = Request.query.filter_by(user_id=session["user_id"]).order_by(Request.created_at.desc()).all()
+    user_requests = Request.query.filter_by(
+        user_id=session["user_id"]
+    ).order_by(Request.created_at.desc()).all()
+
     services = Service.query.all()
     return render_template("user_dashboard.html", requests=user_requests, services=services)
 
-# -------------------------
-# Create new request (User)
-# -------------------------
 @app.route("/user/new_request", methods=["POST"])
 def user_new_request():
     if "user_id" not in session:
@@ -139,24 +134,18 @@ def user_new_request():
     flash("درخواست ثبت شد", "success")
     return redirect("/user_dashboard")
 
-# -------------------------
-# User Logout
-# -------------------------
 @app.route("/user_logout")
 def user_logout():
     session.clear()
     return redirect("/")
 
-# -------------------------
-# Admin Login
-# -------------------------
 @app.route("/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
 
-        if username == "admin" and password == "admin":  # Default admin
+        if username == "admin" and password == "admin":
             session["admin"] = True
             return redirect("/admin/dashboard")
         else:
@@ -164,9 +153,6 @@ def admin_login():
 
     return render_template("login.html")
 
-# -------------------------
-# Admin Dashboard
-# -------------------------
 @app.route("/admin/dashboard")
 def admin_dashboard():
     if "admin" not in session:
@@ -175,9 +161,6 @@ def admin_dashboard():
     all_requests = Request.query.order_by(Request.created_at.desc()).all()
     return render_template("admin_dashboard.html", requests=all_requests)
 
-# -------------------------
-# Admin update request status
-# -------------------------
 @app.route("/admin/update_status/<int:req_id>/<string:new_status>")
 def update_request_status(req_id, new_status):
     if "admin" not in session:
@@ -187,12 +170,10 @@ def update_request_status(req_id, new_status):
     if req:
         req.status = new_status
         db.session.commit()
-        flash(f"وضعیت درخواست '{req.user.full_name}' به '{new_status}' تغییر یافت", "success")
+        flash("وضعیت تغییر کرد", "success")
+
     return redirect("/admin/dashboard")
 
-# -------------------------
-# Admin delete request
-# -------------------------
 @app.route("/admin/delete_request/<int:req_id>")
 def delete_request(req_id):
     if "admin" not in session:
@@ -202,19 +183,17 @@ def delete_request(req_id):
     if req:
         db.session.delete(req)
         db.session.commit()
-        flash(f"درخواست '{req.user.full_name}' حذف شد", "success")
+        flash("درخواست حذف شد", "success")
+
     return redirect("/admin/dashboard")
 
-# -------------------------
-# Admin Logout
-# -------------------------
 @app.route("/logout")
 def admin_logout():
     session.pop("admin", None)
     return redirect("/")
 
 # -------------------------
-# Run the app
+# Render deployment fix
 # -------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
