@@ -1,233 +1,220 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
-import smtplib
-from email.mime.text import MIMEText
+from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///home_service.db'
-app.config['SECRET_KEY'] = 'secret123'
+app.secret_key = "supersecretkey"
+
+# -------------------------
+# Database configuration
+# -------------------------
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///home_service.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 db = SQLAlchemy(app)
 
-# -------------------------------------------------
-# تنظیمات ایمیل
-# -------------------------------------------------
+# -------------------------
+# Models
+# -------------------------
 
-EMAIL_SENDER = "YOUR_EMAIL@gmail.com"
-EMAIL_PASS = "YOUR_APP_PASSWORD"
-
-def send_email(to_email, subject, message):
-    try:
-        msg = MIMEText(message)
-        msg['Subject'] = subject
-        msg['From'] = EMAIL_SENDER
-        msg['To'] = to_email
-
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-        server.login(EMAIL_SENDER, EMAIL_PASS)
-        server.send_message(msg)
-        server.quit()
-
-        print("Email sent successfully")
-
-    except Exception as e:
-        print("Email Error:", e)
-
-
-# -------------------------------------------------
-# مدل‌ها
-# -------------------------------------------------
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    requests = db.relationship("Request", backref="user", lazy=True)
 
 class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100))
-    price = db.Column(db.Integer)
+    title = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Integer, nullable=False)
+    requests = db.relationship("Request", backref="service", lazy=True)
 
-class RequestService(db.Model):
+class Request(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    email = db.Column(db.String(200))
-    service_id = db.Column(db.Integer, db.ForeignKey('service.id'))
-    status = db.Column(db.String(20), default="در انتظار")
-    service = db.relationship('Service')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    service_id = db.Column(db.Integer, db.ForeignKey("service.id"), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default="Pending")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# -------------------------
+# Create database
+# -------------------------
+with app.app_context():
+    db.create_all()
 
-# -------------------------------------------------
-# صفحه اصلی
-# -------------------------------------------------
-
-@app.route('/')
-def home():
-    services = Service.query.all()
-    return render_template('home.html', services=services)
-
-
-# -------------------------------------------------
-# ثبت درخواست
-# -------------------------------------------------
-
-@app.route('/request', methods=['GET', 'POST'])
-def new_request():
-    services = Service.query.all()
-
-    if request.method == 'POST':
-        req = RequestService(
-            name=request.form['name'],
-            phone=request.form['phone'],
-            email=request.form['email'],
-            service_id=request.form['service']
-        )
-
-        db.session.add(req)
+    # Add default services if not exist
+    if Service.query.count() == 0:
+        db.session.add_all([
+            Service(title="نظافت منزل", price=150000),
+            Service(title="لوله کشی", price=200000),
+            Service(title="برق کاری", price=180000)
+        ])
         db.session.commit()
 
-        flash("درخواست شما با موفقیت ثبت شد ✔", "success")
-        return redirect('/')
+# -------------------------
+# Routes
+# -------------------------
 
-    return render_template('request_service.html', services=services)
+# Home page
+@app.route("/")
+def home():
+    services = Service.query.all()
+    return render_template("home.html", services=services)
 
+# -------------------------
+# User Register
+# -------------------------
+@app.route("/user_register", methods=["GET", "POST"])
+def user_register():
+    if request.method == "POST":
+        full_name = request.form["full_name"]
+        email = request.form["email"]
+        password = request.form["password"]
 
-# -------------------------------------------------
-# ورود مدیر
-# -------------------------------------------------
+        if User.query.filter_by(email=email).first():
+            flash("ایمیل قبلا ثبت شده", "danger")
+            return redirect("/user_register")
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        if request.form['username'] == "admin" and request.form['password'] == "1234":
-            session['admin'] = True
-            return redirect('/admin')
+        new_user = User(full_name=full_name, email=email, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash("ثبت نام موفقیت آمیز بود", "success")
+        return redirect("/user_login")
+
+    return render_template("user_register.html")
+
+# -------------------------
+# User Login
+# -------------------------
+@app.route("/user_login", methods=["GET", "POST"])
+def user_login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        user = User.query.filter_by(email=email, password=password).first()
+        if user:
+            session["user_id"] = user.id
+            session["user_name"] = user.full_name
+            return redirect("/user_dashboard")
         else:
-            flash("نام کاربری یا رمز عبور اشتباه است!", "danger")
+            flash("اطلاعات اشتباه است", "danger")
 
-    return render_template('login.html')
+    return render_template("user_login.html")
 
+# -------------------------
+# User Dashboard
+# -------------------------
+@app.route("/user_dashboard")
+def user_dashboard():
+    if "user_id" not in session:
+        return redirect("/user_login")
 
-# -------------------------------------------------
-# داشبورد مدیریت
-# -------------------------------------------------
+    user_requests = Request.query.filter_by(user_id=session["user_id"]).order_by(Request.created_at.desc()).all()
+    services = Service.query.all()
+    return render_template("user_dashboard.html", requests=user_requests, services=services)
 
-@app.route('/admin')
+# -------------------------
+# Create new request (User)
+# -------------------------
+@app.route("/user/new_request", methods=["POST"])
+def user_new_request():
+    if "user_id" not in session:
+        return redirect("/user_login")
+
+    service_id = request.form["service_id"]
+    description = request.form.get("description", "")
+
+    new_request = Request(
+        user_id=session["user_id"],
+        service_id=service_id,
+        description=description
+    )
+    db.session.add(new_request)
+    db.session.commit()
+
+    flash("درخواست ثبت شد", "success")
+    return redirect("/user_dashboard")
+
+# -------------------------
+# User Logout
+# -------------------------
+@app.route("/user_logout")
+def user_logout():
+    session.clear()
+    return redirect("/")
+
+# -------------------------
+# Admin Login
+# -------------------------
+@app.route("/login", methods=["GET", "POST"])
+def admin_login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if username == "admin" and password == "admin":  # Default admin
+            session["admin"] = True
+            return redirect("/admin/dashboard")
+        else:
+            flash("اطلاعات اشتباه است", "danger")
+
+    return render_template("login.html")
+
+# -------------------------
+# Admin Dashboard
+# -------------------------
+@app.route("/admin/dashboard")
 def admin_dashboard():
-    if not session.get('admin'):
-        return redirect('/login')
+    if "admin" not in session:
+        return redirect("/login")
 
-    search = request.args.get('search')
+    all_requests = Request.query.order_by(Request.created_at.desc()).all()
+    return render_template("admin_dashboard.html", requests=all_requests)
 
-    if search:
-        requests_list = RequestService.query.filter(
-            RequestService.name.contains(search)
-        ).all()
-    else:
-        requests_list = RequestService.query.all()
+# -------------------------
+# Admin update request status
+# -------------------------
+@app.route("/admin/update_status/<int:req_id>/<string:new_status>")
+def update_request_status(req_id, new_status):
+    if "admin" not in session:
+        return redirect("/login")
 
-    return render_template('admin_dashboard.html', requests=requests_list, search=search)
-
-
-# -------------------------------------------------
-# آپدیت وضعیت + ارسال ایمیل
-# -------------------------------------------------
-
-@app.route('/update_status/<int:req_id>/<string:new_status>')
-def update_status(req_id, new_status):
-    if not session.get('admin'):
-        return redirect('/login')
-
-    req = RequestService.query.get(req_id)
-
+    req = Request.query.get(req_id)
     if req:
         req.status = new_status
         db.session.commit()
+        flash(f"وضعیت درخواست '{req.user.full_name}' به '{new_status}' تغییر یافت", "success")
+    return redirect("/admin/dashboard")
 
-        try:
-            send_email(
-                to_email=req.email,
-                subject="وضعیت درخواست شما",
-                message=f"کاربر گرامی، وضعیت درخواست شما به '{new_status}' تغییر یافت."
-            )
-        except Exception as e:
-            print("Email Sending Error:", e)
-
-        flash("وضعیت تغییر کرد و ایمیل اطلاع‌رسانی ارسال شد ✔", "success")
-
-    return redirect('/admin')
-
-
-# -------------------------------------------------
-# حذف درخواست
-# -------------------------------------------------
-
-@app.route('/delete_request/<int:req_id>')
+# -------------------------
+# Admin delete request
+# -------------------------
+@app.route("/admin/delete_request/<int:req_id>")
 def delete_request(req_id):
-    if not session.get('admin'):
-        return redirect('/login')
+    if "admin" not in session:
+        return redirect("/login")
 
-    req = RequestService.query.get(req_id)
-
+    req = Request.query.get(req_id)
     if req:
         db.session.delete(req)
         db.session.commit()
-
-    flash("درخواست حذف شد ✔", "success")
-    return redirect('/admin')
-
-
-# -------------------------------------------------
-# اجرای برنامه
-# -------------------------------------------------
-
+        flash(f"درخواست '{req.user.full_name}' حذف شد", "success")
+    return redirect("/admin/dashboard")
 
 # -------------------------
-# نمایش لیست خدمات
+# Admin Logout
 # -------------------------
-@app.route('/services')
-def services_page():
-    if not session.get('admin'):
-        return redirect('/login')
-
-    services = Service.query.all()
-    return render_template('services.html', services=services)
-
+@app.route("/logout")
+def admin_logout():
+    session.pop("admin", None)
+    return redirect("/")
 
 # -------------------------
-# افزودن خدمت جدید
+# Run the app
 # -------------------------
-@app.route('/add_service', methods=['GET', 'POST'])
-def add_service():
-    if not session.get('admin'):
-        return redirect('/login')
-
-    if request.method == 'POST':
-        title = request.form['title']
-        price = request.form['price']
-
-        new_service = Service(title=title, price=price)
-        db.session.add(new_service)
-        db.session.commit()
-
-        flash("خدمت جدید با موفقیت اضافه شد ✔", "success")
-        return redirect('/services')
-
-    return render_template('add_service.html')
-
-@app.route('/logout')
-def logout():
-    session.pop('admin', None)
-    flash("با موفقیت خارج شدید ✔", "success")
-    return redirect('/login')
-
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-
-        if Service.query.count() == 0:
-            db.session.add_all([
-                Service(title="نظافت منزل", price=150000),
-                Service(title="لوله کشی", price=200000),
-                Service(title="برق کاری", price=180000)
-            ])
-            db.session.commit()
-
+if __name__ == "__main__":
     app.run(debug=True)
-    

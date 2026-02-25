@@ -1,50 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3 class="mb-4">📌 درخواست‌های ثبت‌شده</h3>
+<h3 class="mb-4 text-center">💼 پنل مدیریت</h3>
 
-<form class="row mb-3">
-    <div class="col-md-6">
-        <input type="text" name="search" value="{{ search }}" class="form-control"
-               placeholder="جستجو بر اساس نام">
-    </div>
-    <div class="col-md-2">
-        <button class="btn btn-primary w-100">جستجو</button>
-    </div>
-</form>
+<div class="text-end mb-3">
+    <a href="{{ url_for('admin_logout') }}" class="btn btn-warning">خروج</a>
+</div>
 
-<div class="card p-3">
-    <table class="table table-bordered table-striped text-center">
-        <thead>
+<div class="card p-4 shadow">
+    <form class="row mb-3">
+        <div class="col-md-6">
+            <input type="text" name="search" value="{{ search }}" class="form-control"
+                   placeholder="جستجو بر اساس نام">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">جستجو</button>
+        </div>
+    </form>
+
+    <table class="table table-hover table-bordered text-center align-middle">
+        <thead class="table-dark">
             <tr>
-                <th>نام</th>
-                <th>تلفن</th>
+                <th>نام کاربر</th>
                 <th>ایمیل</th>
                 <th>خدمت</th>
                 <th>وضعیت</th>
+                <th>تاریخ ثبت</th>
                 <th>اقدام</th>
             </tr>
         </thead>
         <tbody>
             {% for r in requests %}
             <tr>
-                <td>{{ r.name }}</td>
-                <td>{{ r.phone }}</td>
-                <td>{{ r.email }}</td>
+                <td>{{ r.user.full_name }}</td>
+                <td>{{ r.user.email }}</td>
                 <td>{{ r.service.title }}</td>
-                <td class="fw-bold text-success">{{ r.status }}</td>
                 <td>
-                    <a href="/update_status/{{ r.id }}/در حال انجام"
-                       class="btn btn-warning btn-sm">در حال انجام</a>
-                    <a href="/update_status/{{ r.id }}/انجام شد"
-                       class="btn btn-success btn-sm">انجام شد</a>
-                    <a href="/delete_request/{{ r.id }}"
-                       class="btn btn-danger btn-sm">حذف</a>
+                    {% if r.status == 'Pending' %}
+                        <span class="badge bg-warning text-dark">{{ r.status }}</span>
+                    {% elif r.status == 'Approved' %}
+                        <span class="badge bg-success">{{ r.status }}</span>
+                    {% elif r.status == 'Rejected' %}
+                        <span class="badge bg-danger">{{ r.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ r.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+                <td>
+                    <a href="{{ url_for('update_request_status', req_id=r.id, new_status='Approved') }}" 
+                       class="btn btn-success btn-sm mb-1">تایید</a>
+                    <a href="{{ url_for('update_request_status', req_id=r.id, new_status='Rejected') }}" 
+                       class="btn btn-danger btn-sm mb-1">رد</a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    {% if not requests %}
+    <p class="text-center mt-3">هیچ درخواستی ثبت نشده است.</p>
+    {% endif %}
 </div>
 
 {% endblock %}

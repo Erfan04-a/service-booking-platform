@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+
+            <div class="card shadow-lg border-0 rounded-4 p-4">
+
+                <h4 class="text-center mb-4 fw-bold">ایجاد حساب کاربری</h4>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                  {% endfor %}
+                {% endwith %}
+
+                <form method="POST">
+
+                    <div class="mb-3">
+                        <label class="form-label">نام کامل</label>
+                        <input type="text" name="full_name" class="form-control rounded-3" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">ایمیل</label>
+                        <input type="email" name="email" class="form-control rounded-3" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">رمز عبور</label>
+                        <input type="password" name="password" class="form-control rounded-3" required>
+                    </div>
+
+                    <button class="btn btn-success w-100 rounded-3">
+                        ثبت نام
+                    </button>
+
+                </form>
+
+                <div class="text-center mt-3">
+                    <small>
+                        حساب دارید؟
+                        <a href="/user_login">ورود</a>
+                    </small>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

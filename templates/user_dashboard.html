@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h3 class="mb-4">پنل کاربری / درخواست‌های من</h3>
+
+<!-- دکمه برگشت به صفحه اصلی -->
+<a href="{{ url_for('home') }}" class="btn btn-user mb-3">🏠 بازگشت به صفحه اصلی</a>
+
+<!-- فرم ثبت درخواست جدید -->
+<div class="card p-4 mb-4">
+    <h5>ثبت درخواست جدید</h5>
+    <form method="POST" action="{{ url_for('user_new_request') }}">
+        <div class="mb-3">
+            <label>انتخاب خدمت</label>
+            <select name="service_id" class="form-control" required>
+                {% for service in services %}
+                    <option value="{{ service.id }}">{{ service.title }} - {{ "{:,}".format(service.price) }} تومان</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label>توضیحات</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="توضیحات اضافی..." required></textarea>
+        </div>
+        <button class="btn btn-success w-100">ثبت درخواست</button>
+    </form>
+</div>
+
+<!-- لیست درخواست‌های ثبت‌شده -->
+<div class="card p-3">
+    <h5 class="mb-3">درخواست‌های ثبت‌شده</h5>
+    <table class="table table-bordered table-striped text-center">
+        <thead>
+            <tr>
+                <th>خدمت</th>
+                <th>توضیحات</th>
+                <th>وضعیت</th>
+                <th>تاریخ ثبت</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr>
+                <td>{{ r.service.title }}</td>
+                <td>{{ r.description }}</td>
+                <td>
+                    {% if r.status == 'Pending' %}
+                        <span class="badge bg-warning text-dark">در انتظار</span>
+                    {% elif r.status == 'Approved' %}
+                        <span class="badge bg-success">تایید شد</span>
+                    {% elif r.status == 'Rejected' %}
+                        <span class="badge bg-danger">رد شد</span>
+                    {% endif %}
+                </td>
+                <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
