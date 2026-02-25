@@ -196,4 +196,5 @@ def admin_logout():
 # Render deployment fix
 # -------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    port = int(os.environ.get("PORT", 10000))  # default 10000 برای توسعه محلی
+    app.run(host="0.0.0.0", port=port)
