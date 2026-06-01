@@ -1,188 +1,167 @@
-Service Booking Platform (Persian UI)
+# Service Booking Platform (Persian UI)
 
-Live Demo:
-
+🚀 Live Demo:
 https://service-booking-platform-67xy.onrender.com/
 
-Overview:
+## Overview
 
 Service Booking Platform is a role-based web application built with Flask.
 
-The application interface (UI) is fully in Persian (Farsi), while the backend logic and architecture follow standard software engineering practices.
+The application interface (UI) is fully in Persian (Farsi), while the backend architecture follows standard web development practices.
 
-This system allows users to register, log in, submit service requests, and track the status of their requests. An administrator can manage all requests through a protected dashboard.
+Users can register, log in, submit service requests, and track their request status. An administrator can manage all requests through a protected dashboard.
 
-The project focuses on backend fundamentals such as authentication, authorization, session management, and request lifecycle control.
+This project focuses on authentication, authorization, session management, and request lifecycle handling.
 
+---
 
-Key Features
+## Features
 
-User Panel (Persian Interface):
+### User Panel
 
-User registration
+- User registration
+- User login
+- Session-based authentication
+- Submit service requests
+- Add descriptions to requests
+- View personal requests
+- Track request status:
+  - Pending
+  - Approved
+  - Rejected
+- Secure logout
+- Users can only access their own data
 
-Login with session authentication
+### Admin Panel
 
-Access restricted if email is not registered
+- Separate admin login
+- Protected dashboard
+- Search functionality
+- View all requests
+- Approve requests
+- Reject requests
+- Delete requests
+- Secure logout
+- Unauthorized users cannot access admin routes
 
-Submit service requests with description
+---
 
-View personal request history
+## Architecture
 
+- Role-Based Access Control (Admin / User)
+- Session Authentication
+- Protected Routes
+- Request Lifecycle Management
+- Data Isolation
+- SQLite Database Integration
 
-Track request status:
+---
 
-    Pending (default)
-    
-    Approved
-    
-    Rejected
-    
-Users can only view their own requests (data isolation enforced)
+## Tech Stack
 
-Secure logout (session cleared)
+- Python
+- Flask
+- SQLite
+- HTML
+- CSS
+- Jinja2
+- Git
+- GitHub
+- Render
 
+---
 
-Admin Panel:
+## Application Flow
 
-Separate admin login
+1. User registers an account
+2. User logs in
+3. User submits a service request
+4. Request status is automatically set to **Pending**
+5. Admin reviews requests
+6. Admin updates status
+7. User can track request progress
 
-Protected admin dashboard (/admin/dashboard)
+---
 
-Direct URL access without login is restricted
+## Security Features
 
-View all user requests
+- Session validation
+- Protected admin routes
+- Data isolation per user
+- Secure logout
+- Admin-only status modification
 
-Search functionality
+---
 
-Approve requests
+## Run Locally
 
-Reject requests
+Clone the repository:
 
-Delete requests
-
-Logout with session clearing
-
-
-Architecture & Logic:
-
-Role-Based Access Control (Admin / User)
-
-Session-based authentication
-
-Protected routes
-
-Data isolation per user
-
-Default request status set to "Pending"
-
-Only admin can modify request status
-
-Route protection prevents unauthorized access
-
-Secure logout implementation
-
-
-Tech Stack:
-
-Python
-
-Flask
-
-SQLite
-
-HTML / CSS
-
-Jinja2
-
-Git & GitHub
-
-
-Render (Live deployment)
-
-Application Flow:
-
-User registers (Persian interface)
-
-User logs in
-
-User submits a service request
-
-Request is automatically created with status: "Pending"
-
-Admin logs into admin panel
-
-Admin reviews and updates request status
-
-User can see updated status in their dashboard
-
-
-Security Measures:
-
-Session validation before accessing protected routes
-
-Admin routes require authentication
-
-Users cannot access other users' data
-
-Logout clears session data
-
-Status modification restricted to admin
-
-
-
-Running Locally:
-
-Clone repository:
-
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-
-cd YOUR_REPO_NAME
+```bash
+git clone https://github.com/Erfan04-a/service-booking-platform.git
+cd service-booking-platform
+```
 
 Create virtual environment:
 
+```bash
 python -m venv venv
+```
 
-Activate:
+Activate environment:
 
 Windows:
 
+```bash
 venv\Scripts\activate
+```
 
-Mac/Linux:
+Linux / macOS:
 
+```bash
 source venv/bin/activate
+```
 
 Install dependencies:
 
+```bash
 pip install -r requirements.txt
+```
 
-Run:
+Run the application:
 
+```bash
 python app.py
+```
 
-Open:
+Open in browser:
 
+```text
 http://127.0.0.1:5000/
+```
 
+---
 
-Future Improvements:
+## Future Improvements
 
-Password hashing improvement
+- Password hashing
+- Environment variables for credentials
+- Better UI/UX
+- Email notifications
+- PostgreSQL integration
+- Docker support
 
-Environment variable management for admin credentials
+---
 
-UI enhancement and design polish
+## Notes
 
-Email notifications for status updates
+- The application interface is fully in Persian (Farsi).
+- The project was built to demonstrate backend development concepts including authentication, authorization, and request management.
+- This is a backend-focused project with role-based access control and request lifecycle handling.
 
-Pagination for scalability
+---
 
-Migration to PostgreSQL for production-level database
+## Author
 
-Docker containerization
-
-Notes:
-The UI is fully in Persian (Farsi).
-The project is designed to demonstrate backend engineering concepts rather than frontend complexity.
-This project represents a complete mini production-style system including authentication, authorization, and request lifecycle management.
+Erfan
+Computer Engineering Student
