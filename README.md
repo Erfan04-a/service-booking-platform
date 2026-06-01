@@ -74,37 +74,52 @@ Status modification restricted to admin
 Running Locally:
 
 Clone repository:
+
 git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+
 cd YOUR_REPO_NAME
 
 Create virtual environment:
+
 python -m venv venv
 
 Activate:
+
 Windows:
+
 venv\Scripts\activate
 
 Mac/Linux:
+
 source venv/bin/activate
 
 Install dependencies:
+
 pip install -r requirements.txt
 
 Run:
+
 python app.py
 
 Open:
+
 http://127.0.0.1:5000/
 
 
 Future Improvements:
 
 Password hashing improvement
+
 Environment variable management for admin credentials
+
 UI enhancement and design polish
+
 Email notifications for status updates
+
 Pagination for scalability
+
 Migration to PostgreSQL for production-level database
+
 Docker containerization
 
 Notes:
